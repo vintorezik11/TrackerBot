@@ -1,4 +1,5 @@
 from datetime import date
+import datetime as dt
 import os
 from dotenv import load_dotenv
 
@@ -153,9 +154,42 @@ class Database:
 
         self.conn.commit()
 
+    def get_habits_status_for_day(self, date: date, user_id: int):
+        sql = """SELECT status FROM reports WHERE day = %s AND user_id = %s"""
+
+        self.cur.execute(sql, (date, user_id))
+
+        status_all = self.cur.fetchall()
+        cnt = 0
+
+        for status in status_all:
+            if status[0] == True:
+                cnt += 1
+
+        if cnt == len(status_all) and status_all != []:
+            return True
+        else:
+            return False
+
+    def get_habits_status_for_month(self, user_id: int):
+        status_spisok = []
+        for i in range(31):
+            status_spisok.append(self.get_habits_status_for_day(date.today() - dt.timedelta(days=i), user_id))
+
+        return status_spisok
+
+    def get_len_habits_status_true_for_month(self, user_id: int):
+        status_cnt = 0
+        for i in range(31):
+            if self.get_habits_status_for_day(date.today() - dt.timedelta(days=i), user_id) == True:
+                    status_cnt += 1
+
+        return status_cnt
 
 
 if __name__ == "__main__":
     db = Database()
-    db.note_habit(habit_id=23, status=True)
+    print(db.get_habits_status_for_month(1145169882))
+    print(db.get_habits_status_for_day(date.today(), 1145169882))
+    print(db.get_len_habits_status_true_for_month(1145169882))
 
